@@ -1,4 +1,4 @@
-from core.util import decompose_byte, twos_complement
+from core.util import decompose_byte, twos_complement, tohex
 
 
 class Instructions:
@@ -291,6 +291,41 @@ class Instructions:
         data = self.op.memory_read(addr)
         if data:
             return bounce_to_label(label)
+        return True
+
+    def mul(self, addr_1="A", addr_2="B") -> bool:
+        # addr_1, _ = self._resolve_addressing_mode(addr_1)
+        # addr_2, _ = self._resolve_addressing_mode(addr_2)
+        addr_1 = "A"
+        addr_2 = "B"
+        # Fetch register objects
+        reg1 = self.op._get_register(addr_1)
+        reg2 = self.op._get_register(addr_2)
+
+        # Read values (assuming they return integers, not hex strings)
+        data_1 = reg1.read()
+        data_2 = reg2.read()
+
+        # Perform 8-bit × 8-bit multiplication
+        result = int(data_1) * int(data_2)
+        print(result)
+
+        result_low = result & 0xFF
+        result_high = (result >> 8) & 0xFF
+        result_low = tohex(str(hex(result_low)))
+        result_high = tohex(str(hex(result_high)))
+
+        # Write results back to A and B
+        self.op.memory_write("0xE0", result_low)
+        self.op.memory_write("0xF0", result_high)
+
+        # CY is always cleared for MUL
+        self.flags.CY = False
+
+        # OV (overflow) is set if upper byte (B) is non-zero
+        self.flags.OV = bool(result_high)
+
+        print(f"MUL {addr_1}, {addr_2} => {data_1} × {data_2} = {result} (A={result_low}, B={result_high})")
         return True
 
     pass

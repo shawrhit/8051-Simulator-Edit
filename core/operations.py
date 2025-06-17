@@ -87,6 +87,7 @@ class Operations:
     def _get_register(self, addr):
         addr = addr.upper()
         _register = self._registers_list.get(addr, None)
+        print(addr)
         if _register:
             return _register
         raise SyntaxError(msg="next link not found; check the instruction")
